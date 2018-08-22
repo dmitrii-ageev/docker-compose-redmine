@@ -1,0 +1,54 @@
+version: '2'
+
+volumes:
+  redmine-themes:
+  redmine-plugins:
+  redmine-initdb:
+  redmine-database:
+
+services:
+  redmine-themes:
+    image: dmitriiageev/redmine-themes
+    volumes:
+      - redmine-themes:/usr/src/redmine/public/themes
+
+  redmine-plugins:
+    image: dmitriiageev/redmine-plugins
+    volumes:
+      - redmine-plugins:/usr/src/redmine/plugins
+      - redmine-initdb:/docker-entrypoint-initdb.d
+
+  # To create a database dump use:
+  # docker exec some-postgres sh -c '/usr/bin/pg_dump -Fp -v --host=localhost --username=redmine --dbname=redmine' > /some/path/on/your/host/all-databases.sql
+  postgres:
+    image: postgres
+    restart: always
+    depends_on:
+      - redmine-plugins
+    environment:
+      POSTGRES_DATABASE: redmine
+      POSTGRES_USER: redmine
+      POSTGRES_PASSWORD: password
+    volumes:
+      - redmine-initdb:/docker-entrypoint-initdb.d
+      - redmine-database:/var/lib/postgresql/data
+
+  redmine:
+    image: redmine
+    restart: always
+    depends_on:
+      - postgres
+      - redmine-plugins
+      - redmine-themes
+    environment:
+      REDMINE_DB_POSTGRES: postgres
+      REDMINE_DB_PORT: 5432
+      REDMINE_DB_DATABASE: redmine
+      REDMINE_DB_USERNAME: redmine
+      REDMINE_DB_PASSWORD: password
+      REDMINE_PLUGINS_MIGRATE: "yes"
+    ports:
+      - 80:3000
+    volumes:
+      - redmine-themes:/usr/src/redmine/public/themes
+      - redmine-plugins:/usr/src/redmine/plugins
