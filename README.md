@@ -11,7 +11,7 @@ To run Redmine with MySQL database, run in this directory:
 
 for PostgreSQL database, run:
 
-` docker-compose --file docker-compose-postgres.yml up -d `
+` docker-compose --file docker-compose-postgresql.yml up -d `
 
 The app will be running at http://localhost:80.
 
